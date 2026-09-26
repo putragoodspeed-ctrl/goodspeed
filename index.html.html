@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dashboard Karyawan GoodSpeed</title>
+<style>
+:root{--bg0:#faf9f6;--bg1:#fff;--bg2:#f1efe8;--tp:#0b0b0b;--ts:#52514e;--tm:#898781;--bd:rgba(11,11,11,.08);--bds:rgba(11,11,11,.14);
+--blue-bg:#e6f1fb;--blue-tx:#0c447c;--blue-fill:#378add;
+--teal-bg:#e1f5ee;--teal-tx:#085041;--teal-fill:#1d9e75;
+--purple-bg:#eeedfe;--purple-tx:#3c3489;--purple-fill:#7f77dd;
+--amber-bg:#faeeda;--amber-tx:#633806;--amber-fill:#ba7517;
+--coral-bg:#faece7;--coral-tx:#712b13;--coral-fill:#d85a30;
+--pink-bg:#fbeaf0;--pink-tx:#72243e;--pink-fill:#d4537e}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg0:#141413;--bg1:#1e1e1c;--bg2:#26251f;--tp:#f0efec;--ts:#c3c2b7;--tm:#898781;--bd:rgba(255,255,255,.1);--bds:rgba(255,255,255,.18);
+--blue-bg:#0c447c;--blue-tx:#b5d4f4;--blue-fill:#378add;
+--teal-bg:#085041;--teal-tx:#9fe1cb;--teal-fill:#1d9e75;
+--purple-bg:#3c3489;--purple-tx:#cecbf6;--purple-fill:#7f77dd;
+--amber-bg:#633806;--amber-tx:#fac775;--amber-fill:#ba7517;
+--coral-bg:#712b13;--coral-tx:#f5c4b3;--coral-fill:#d85a30;
+--pink-bg:#72243e;--pink-tx:#f4c0d1;--pink-fill:#d4537e}}
+:root[data-theme="dark"]{--bg0:#141413;--bg1:#1e1e1c;--bg2:#26251f;--tp:#f0efec;--ts:#c3c2b7;--tm:#898781;--bd:rgba(255,255,255,.1);--bds:rgba(255,255,255,.18)}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,'Segoe UI',sans-serif;background:var(--bg0);color:var(--tp);padding:1.5rem;max-width:1080px;margin:0 auto;padding-top:calc(1.5rem + env(safe-area-inset-top,0px));padding-bottom:calc(2rem + env(safe-area-inset-bottom,0px))}
+.hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:1.5rem;flex-wrap:wrap}
+h1{font-size:23px;font-weight:500;margin:0 0 4px;letter-spacing:-.01em}
+.sub{color:var(--ts);font-size:13px;margin:0}
+.statusbar{display:flex;align-items:center;gap:8px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--tm);flex-shrink:0}
+.statustxt{font-size:12px;color:var(--ts)}
+.btn{height:30px;padding:0 12px;font-size:12.5px;border:.5px solid var(--bds);border-radius:8px;background:var(--bg1);color:var(--tp);cursor:pointer;transition:background .15s}
+.btn:hover{background:var(--bg2)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:1.25rem}
+.card{border-radius:12px;padding:1rem 1.1rem;position:relative;overflow:hidden}
+.card .lbl{font-size:12px;margin:0 0 6px;opacity:.85}
+.card .val{font-size:26px;font-weight:500;margin:0;font-variant-numeric:tabular-nums}
+.chartsrow{display:grid;grid-template-columns:1.6fr 1fr;gap:12px;margin-bottom:1.25rem}
+@media (max-width:640px){.chartsrow{grid-template-columns:1fr}}
+.panel{background:var(--bg1);border:.5px solid var(--bd);border-radius:12px;padding:1rem}
+.panel .ptitle{font-size:12px;color:var(--ts);margin:0 0 .75rem;font-weight:500}
+.chartwrap{height:210px;position:relative}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:.75rem;font-size:12px;color:var(--ts)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.dotsm{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:.9rem}
+select,input[type=text]{height:36px;border:.5px solid var(--bds);border-radius:8px;background:var(--bg1);color:var(--tp);padding:0 12px;font-size:13px}
+input[type=text]{flex:1;min-width:180px}
+select:hover,input[type=text]:hover{border-color:var(--tm)}
+.panel-table{background:var(--bg1);border:.5px solid var(--bd);border-radius:12px;overflow:hidden}
+.count{font-size:12px;color:var(--tm);padding:10px 14px 0}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:10px 12px;white-space:nowrap}
+th{background:var(--bg2);color:var(--ts);font-weight:500;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;position:sticky;top:0}
+tbody tr{border-top:.5px solid var(--bd)}
+tbody tr:hover{background:var(--bg2)}
+.who{display:flex;align-items:center;gap:9px}
+.av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0}
+.badge{display:inline-block;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:500}
+.empty{padding:2rem;text-align:center;color:var(--tm);font-size:13px}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div>
+    <h1>Dashboard karyawan GoodSpeed</h1>
+    <p class="sub">Live dari Google Sheets (publish to web) &middot; WS_GoodSpeed 2026</p>
+  </div>
+  <div class="statusbar">
+    <span class="dot" id="statusDot"></span>
+    <span class="statustxt" id="statusText">Memuat...</span>
+    <button class="btn" id="refreshBtn">Refresh</button>
+  </div>
+</div>
+
+<div class="cards" id="cards"></div>
+
+<div class="chartsrow">
+  <div class="panel">
+    <p class="ptitle">Karyawan per cabang</p>
+    <div class="chartwrap"><canvas id="chart" role="img" aria-label="Jumlah karyawan per cabang"></canvas></div>
+  </div>
+  <div class="panel">
+    <p class="ptitle">Komposisi gender</p>
+    <div class="chartwrap" style="height:160px"><canvas id="chartGender" role="img" aria-label="Komposisi gender karyawan"></canvas></div>
+    <div class="legend" id="genderLegend"></div>
+  </div>
+</div>
+
+<div class="controls">
+  <input type="text" id="search" placeholder="Cari nama...">
+  <select id="fCabang"></select>
+  <select id="fPosisi"></select>
+  <select id="fStatus"></select>
+</div>
+<div class="panel-table">
+  <p class="count" id="count"></p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Nama</th><th>Posisi</th><th>Cabang</th><th>Status</th><th>Mulai kerja</th><th>Masa kerja</th><th>Usia</th><th>Kontak</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+let DATA=[
+{n:"Rivaldo Junior Tinangon",g:"Pria",u:24,st:"Full Time",p:"Head Of Operations",c:"GS Roastery",m:"18/10/2022",mk:3,hp:"0895395755444"},
+{n:"Yolanda Ponengoh",g:"Wanita",u:20,st:"Full Time",p:"Barista",c:"GS Komunal Space",m:"17/01/2026",mk:0,hp:"085229565660"},
+{n:"Iqra Mulya Putra Abrianto",g:"Pria",u:19,st:"Full Time",p:"Head Bar",c:"GS Backyard",m:"20/12/2024",mk:1,hp:"081294505568"},
+{n:"Naysila Tengker",g:"Wanita",u:18,st:"Full Time",p:"Barista",c:"GS MM Kuliner",m:"19/04/2026",mk:0,hp:"081524029163"},
+{n:"Bambang Permadi Saputra Prabowo",g:"Pria",u:31,st:"Full Time",p:"Head Of Finance",c:"Head Office",m:"23/09/2026",mk:0,hp:"082192767128"},
+{n:"Abdul Rifaldo Maiya",g:"Pria",u:20,st:"Full Time",p:"Head Bar",c:"GS Junko",m:"02/11/2025",mk:0,hp:"083847076494"},
+{n:"Wendy Stefanus Dengah",g:"Pria",u:26,st:"Full Time",p:"Barista",c:"GS Komunal Space",m:"21/07/2025",mk:1,hp:"085258386581"},
+{n:"Indriyani Suleman",g:"Wanita",u:26,st:"Full Time",p:"Admin",c:"Head Office",m:"25/09/2025",mk:1,hp:"0895804028715"},
+{n:"Gloria Mamangkey",g:"Wanita",u:23,st:"Full Time",p:"Barista",c:"GS Sore",m:"09/09/2026",mk:0,hp:"082189642464"},
+{n:"Mohamad Farhan Nurdiansyah Fadjar Adam",g:"Pria",u:24,st:"Full Time",p:"Barista",c:"(belum diisi)",m:"12/12/2024",mk:1,hp:"0895637918988"},
+{n:"Juan Excel Andaria",g:"Pria",u:20,st:"Full Time",p:"Barista",c:"GS Backyard",m:"09/09/2026",mk:0,hp:"089653886335"},
+{n:"Erza Jovial Barauntu",g:"Pria",u:21,st:"Full Time",p:"Barista",c:"GS Komunal Space",m:"13/02/2026",mk:0,hp:"083894887551"},
+{n:"Indra Surya Mulyono Mentu",g:"Pria",u:32,st:"Full Time",p:"Head Bar",c:"GS Dodik",m:"-",mk:"-",hp:"0895330325039"},
+{n:"A Aflah Rivo",g:"Pria",u:28,st:"Full Time",p:"Head Bar",c:"GS Komunal Space",m:"13/02/2025",mk:1,hp:"082292004139"},
+{n:"Islamic Fajar Lutfy Ansyah Makawata",g:"Pria",u:24,st:"Full Time",p:"Barista",c:"GS Sore",m:"06/04/2026",mk:0,hp:"081342192212"},
+{n:"Nirwana Pahude",g:"Wanita",u:20,st:"Full Time",p:"Barista",c:"GS Gasoline",m:"22/09/2025",mk:1,hp:"089655259387"},
+{n:"Bayu Maulana Putra Perkasa Maramis",g:"Pria",u:26,st:"Full Time",p:"Head Bar",c:"GS MM Kuliner",m:"11/08/2025",mk:1,hp:"085240523620"},
+{n:"Arinny Julianti Panigoro",g:"Wanita",u:19,st:"Full Time",p:"Barista",c:"GS Komunal Space",m:"01/11/2025",mk:0,hp:"085240215669"},
+{n:"Andi Ilham Mahyuddin",g:"Pria",u:31,st:"Full Time",p:"Head Of Operations",c:"(belum diisi)",m:"20/09/2023",mk:3,hp:"0812-8334-3821"},
+{n:"Yudistira Toi",g:"Pria",u:25,st:"Full Time",p:"Barista",c:"GS MM Kuliner",m:"10/10/2025",mk:0,hp:"085219119740"},
+{n:"Fadel Ali",g:"Pria",u:20,st:"Full Time",p:"Barista",c:"GS Backyard",m:"20/11/2025",mk:0,hp:"082196762277"},
+{n:"Muhammad Ardhanny Tumengkol",g:"Pria",u:19,st:"Part Time",p:"Barista",c:"GS Dodik",m:"03/08/2025",mk:1,hp:"082156701150"},
+{n:"Agung Botutihe",g:"Pria",u:21,st:"Full Time",p:"Barista",c:"GS Junko",m:"16/08/2026",mk:0,hp:"081343508123"},
+{n:"Abdii Lihawa",g:"Pria",u:20,st:"Full Time",p:"Barista",c:"GS MM Kuliner",m:"01/09/2026",mk:0,hp:"083847668476"},
+{n:"Zainal Suleman",g:"Pria",u:23,st:"Full Time",p:"Barista",c:"GS Junko",m:"23/09/2026",mk:0,hp:"0882020377379"},
+{n:"Aktoberly Victor Palempung",g:"Pria",u:18,st:"Full Time",p:"Barista",c:"GS Sore",m:"09/09/2026",mk:0,hp:"081241904580"},
+{n:"Rilando Miracle Lowing",g:"Pria",u:25,st:"Full Time",p:"Barista",c:"GS Gasoline",m:"13/02/2026",mk:0,hp:"082343005560"},
+{n:"Ferren Velika Ezra Terok",g:"Wanita",u:20,st:"Full Time",p:"Barista",c:"GS MM Kuliner",m:"07/09/2026",mk:0,hp:"082358020021"},
+{n:"Christo Edgar Horoni",g:"Pria",u:23,st:"Full Time",p:"Barista",c:"GS MM Kuliner",m:"21/09/2026",mk:0,hp:"085284147936"},
+{n:"Ikhsan Abdur Rohim",g:"Pria",u:19,st:"Full Time",p:"Barista",c:"GS Backyard",m:"14/05/2025",mk:1,hp:"085343554538"},
+{n:"Bryan Rafael Lalela",g:"Pria",u:25,st:"Full Time",p:"Barista",c:"GS Gasoline",m:"08/02/2026",mk:0,hp:"089519504942"},
+{n:"Alwi Shihab Andy Yunus",g:"Pria",u:23,st:"Full Time",p:"Barista",c:"GS Sore",m:"01/04/2026",mk:0,hp:"0882022343981"},
+{n:"Rizky Bawoel",g:"Pria",u:22,st:"Full Time",p:"Barista",c:"GS Sore",m:"26/09/2026",mk:0,hp:"079697984101"},
+{n:"Fazar Azhari Kasim",g:"Pria",u:26,st:"Full Time",p:"Barista",c:"GS Sore",m:"03/01/2026",mk:0,hp:"089603507214"},
+{n:"Tengku Pasya Mohi",g:"Pria",u:20,st:"Full Time",p:"Barista",c:"GS Backyard",m:"08/07/2026",mk:0,hp:"08212684366"},
+{n:"Gysela Inriani Nangaro",g:"Wanita",u:17,st:"Full Time",p:"Barista",c:"GS Sore",m:"10/09/2026",mk:0,hp:"083111652301"},
+{n:"Mustaqimah Siratih",g:"Wanita",u:31,st:"Full Time",p:"Barista",c:"GS Backyard",m:"26/01/2023",mk:3,hp:"089653876023"}
+];
+
+function fillSelect(id,opts,label){
+  const el=document.getElementById(id);
+  const prev=el.value;
+  el.innerHTML=`<option value="">${label}</option>`+opts.map(o=>`<option value="${o}">${o}</option>`).join('');
+  if(opts.includes(prev))el.value=prev;
+}
+function rebuildFilters(){
+  fillSelect('fCabang',[...new Set(DATA.map(d=>d.c))].sort(),'Semua cabang');
+  fillSelect('fPosisi',[...new Set(DATA.map(d=>d.p))].sort(),'Semua posisi');
+  fillSelect('fStatus',[...new Set(DATA.map(d=>d.st))].sort(),'Semua status');
+}
+rebuildFilters();
+
+let chart,chartGender;
+const CSV_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vS4uFgCM2oLJtObruheLR9QBum6mHHI00jRMqg03zVFx7tSpaLPbCeDDNiEDThGtfO5tyBBTuWZUuxV/pub?gid=1816774141&single=true&output=csv";
+const CARD_COLORS=[
+  {bg:'var(--blue-bg)',tx:'var(--blue-tx)'},
+  {bg:'var(--teal-bg)',tx:'var(--teal-tx)'},
+  {bg:'var(--purple-bg)',tx:'var(--purple-tx)'},
+  {bg:'var(--amber-bg)',tx:'var(--amber-tx)'}
+];
+const STATUS_COLOR={'Full Time':{bg:'var(--teal-bg)',tx:'var(--teal-tx)'},'Part Time':{bg:'var(--amber-bg)',tx:'var(--amber-tx)'}};
+const AV_COLORS=[['var(--blue-bg)','var(--blue-tx)'],['var(--purple-bg)','var(--purple-tx)'],['var(--coral-bg)','var(--coral-tx)'],['var(--pink-bg)','var(--pink-tx)'],['var(--teal-bg)','var(--teal-tx)']];
+
+function apply(){
+  const q=document.getElementById('search').value.trim().toLowerCase();
+  const fc=document.getElementById('fCabang').value;
+  const fp=document.getElementById('fPosisi').value;
+  const fs=document.getElementById('fStatus').value;
+  const list=DATA.filter(d=>
+    (!q||d.n.toLowerCase().includes(q)) &&
+    (!fc||d.c===fc) && (!fp||d.p===fp) && (!fs||d.st===fs));
+  renderCards(list);renderChart(list);renderTable(list);
+}
+
+['search','fCabang','fPosisi','fStatus'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',apply);
+  document.getElementById(id).addEventListener('change',apply);
+});
+apply();
+
+function setStatus(kind,text){
+  const dot=document.getElementById('statusDot'),txt=document.getElementById('statusText');
+  const colors={ok:'#639922',err:'#e24b4a',loading:'#eda100'};
+  dot.style.background=colors[kind]||'var(--tm)';
+  txt.innerHTML=text;
+}
+function renderCards(list){
+  const total=list.length;
+  const ft=list.filter(d=>d.st==='Full Time').length;
+  const pt=total-ft;
+  const avgAge=total?Math.round(list.reduce((s,d)=>s+(typeof d.u==='number'?d.u:0),0)/total):0;
+  const nCabang=new Set(list.map(d=>d.c)).size;
+  const data=[
+    ['Total karyawan',total],
+    ['Full time / Part time',`${ft} / ${pt}`],
+    ['Jumlah cabang',nCabang],
+    ['Rata-rata usia',`${avgAge} th`]
+  ];
+  document.getElementById('cards').innerHTML=data.map((d,i)=>{
+    const c=CARD_COLORS[i];
+    return `<div class="card" style="background:${c.bg};color:${c.tx}"><p class="lbl">${d[0]}</p><p class="val">${d[1]}</p></div>`;
+  }).join('');
+}
+
+function renderChart(list){
+  const counts={};
+  list.forEach(d=>counts[d.c]=(counts[d.c]||0)+1);
+  const labels=Object.keys(counts);
+  const values=Object.values(counts);
+  if(chart)chart.destroy();
+  const isDark=(document.documentElement.dataset.theme==='dark')||(!document.documentElement.dataset.theme&&matchMedia('(prefers-color-scheme: dark)').matches);
+  chart=new Chart(document.getElementById('chart'),{
+    type:'bar',
+    data:{labels,datasets:[{label:'Karyawan',data:values,backgroundColor:'#378add',borderRadius:4,maxBarThickness:26}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{
+        y:{beginAtZero:true,ticks:{precision:0,color:isDark?'#c3c2b7':'#52514e'},grid:{color:isDark?'#2c2c2a':'#e1e0d9'}},
+        x:{ticks:{autoSkip:false,maxRotation:45,color:isDark?'#c3c2b7':'#52514e'},grid:{display:false}}
+      }}
+  });
+  const genderCounts={};
+  list.forEach(d=>genderCounts[d.g]=(genderCounts[d.g]||0)+1);
+  const gLabels=Object.keys(genderCounts);
+  const gValues=Object.values(genderCounts);
+  const gColors=['#378add','#d4537e','#888780'];
+  if(chartGender)chartGender.destroy();
+  chartGender=new Chart(document.getElementById('chartGender'),{
+    type:'doughnut',
+    data:{labels:gLabels,datasets:[{data:gValues,backgroundColor:gColors,borderColor:isDark?'#1e1e1c':'#fff',borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{display:false}}}
+  });
+  const totalG=gValues.reduce((a,b)=>a+b,0)||1;
+  document.getElementById('genderLegend').innerHTML=gLabels.map((l,i)=>
+    `<span><span class="dotsm" style="background:${gColors[i]}"></span>${l} ${Math.round(gValues[i]/totalG*100)}%</span>`
+  ).join('');
+}
+
+function initials(name){
+  const p=name.trim().split(/\s+/);
+  return ((p[0]?.[0]||'')+(p[1]?.[0]||'')).toUpperCase();
+}
+function renderTable(list){
+  document.getElementById('count').textContent=`${list.length} dari ${DATA.length} karyawan`;
+  if(!list.length){
+    document.getElementById('rows').innerHTML=`<tr><td colspan="8"><div class="empty">Tidak ada karyawan yang cocok dengan filter.</div></td></tr>`;
+    return;
+  }
+  document.getElementById('rows').innerHTML=list.map((d,i)=>{
+    const sc=STATUS_COLOR[d.st]||{bg:'var(--bg2)',tx:'var(--ts)'};
+    const av=AV_COLORS[i%AV_COLORS.length];
+    return `<tr>
+      <td><div class="who"><div class="av" style="background:${av[0]};color:${av[1]}">${initials(d.n)}</div>${d.n}</div></td>
+      <td>${d.p}</td><td>${d.c}</td>
+      <td><span class="badge" style="background:${sc.bg};color:${sc.tx}">${d.st}</span></td>
+      <td>${d.m}</td><td>${d.mk===0?'Baru':(d.mk==='-'?'-':d.mk+' th')}</td><td>${d.u}</td><td>${d.hp}</td></tr>`;
+  }).join('');
+}
+function parseCSV(text){
+  const rows=[];let row=[],field='',inQuotes=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(inQuotes){
+      if(c==='"'){
+        if(text[i+1]==='"'){field+='"';i++;}else{inQuotes=false;}
+      }else field+=c;
+    }else{
+      if(c==='"')inQuotes=true;
+      else if(c===','){row.push(field);field='';}
+      else if(c==='\r'){/*skip*/}
+      else if(c==='\n'){row.push(field);rows.push(row);row=[];field='';}
+      else field+=c;
+    }
+  }
+  if(field!==''||row.length){row.push(field);rows.push(row);}
+  return rows.filter(r=>r.some(c=>c.trim()!==''));
+}
+function findCol(headers,...keywords){
+  return headers.findIndex(h=>keywords.some(k=>h.toLowerCase().includes(k.toLowerCase())));
+}
+function extractKaryawan(csvText){
+  const rows=parseCSV(csvText);
+  if(rows.length<2)return[];
+  const headers=rows[0];
+  const idx={
+    nama:findCol(headers,'nama lengkap'),
+    gender:findCol(headers,'jenis kelamin'),
+    usia:findCol(headers,'usia'),
+    status:findCol(headers,'status kerja'),
+    posisi:findCol(headers,'posisi'),
+    cabang:findCol(headers,'cabang'),
+    mulai:findCol(headers,'tanggal mulai'),
+    masa:findCol(headers,'masa kerja'),
+    hp:findCol(headers,'no. hp','no hp','nomor hp')
+  };
+  if(idx.nama<0)return[];
+  const out=[];
+  for(let i=1;i<rows.length;i++){
+    const r=rows[i];
+    const nama=(r[idx.nama]||'').trim();
+    if(!nama)continue;
+    out.push({
+      n:nama,
+      g:(r[idx.gender]||'-').trim(),
+      u:idx.usia>=0&&r[idx.usia]?parseInt(r[idx.usia])||0:0,
+      st:(r[idx.status]||'-').trim()||'-',
+      p:(r[idx.posisi]||'-').trim()||'-',
+      c:(r[idx.cabang]||'(belum diisi)').trim()||'(belum diisi)',
+      m:(r[idx.mulai]||'-').trim()||'-',
+      mk:(r[idx.masa]||'').trim(),
+      hp:(r[idx.hp]||'-').trim()||'-'
+    });
+  }
+  return out;
+}
+async function fetchLive(manual){
+  setStatus('loading',manual?'Mengambil data terbaru...':'Memuat data terbaru...');
+  try{
+    const res=await fetch(CSV_URL+'&_ts='+Date.now(),{cache:'no-store'});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const text=await res.text();
+    const rows=extractKaryawan(text);
+    if(rows.length){
+      DATA=rows;
+      rebuildFilters();
+      apply();
+      const t=new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+      setStatus('ok',`Live &middot; diperbarui ${t} &middot; ${rows.length} karyawan`);
+    }else{
+      setStatus('err','Gagal membaca data (kolom sheet mungkin berubah). Menampilkan data terakhir.');
+    }
+  }catch(err){
+    setStatus('err','Gagal memuat data terbaru (cek koneksi internet). Menampilkan data terakhir.');
+    setTimeout(()=>fetchLive(false),5000);
+  }
+}
+document.getElementById('refreshBtn').addEventListener('click',()=>fetchLive(true));
+fetchLive(false);
+setInterval(()=>fetchLive(false),60000);
+</script>
+</body>
+</html>
