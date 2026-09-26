@@ -157,7 +157,7 @@ function rebuildFilters(){
 rebuildFilters();
 
 let chart,chartGender;
-const FILE_ID="1liK7R6AQrQM0GAOttTnzTXU9La_VfNbRPSZQSW0E_Ro";
+const SHEET_CSV_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vS4uFgCM2oLJtObruheLR9QBum6mHHI00jRMqg03zVFx7tSpaLPbCeDDNiEDThGtfO5tyBBTuWZUuxV/pub?gid=1597219942&single=true&output=csv";
 const CARD_COLORS=[
   {bg:'var(--blue-bg)',tx:'var(--blue-tx)'},
   {bg:'var(--teal-bg)',tx:'var(--teal-tx)'},
@@ -261,96 +261,60 @@ function renderTable(list){
       <td>${d.m}</td><td>${d.mk===0?'Baru':(d.mk==='-'?'-':d.mk+' th')}</td><td>${d.u}</td><td>${d.hp}</td></tr>`;
   }).join('');
 }
-function parseRow(tokens){
-  const nikIdx=tokens.findIndex(t=>/^\d{15,17}$/.test(t.trim()));
-  if(nikIdx<1)return null;
-  const nama=tokens[nikIdx-1].trim();
-  const genderIdx=nikIdx+1;
-  const gender=tokens[genderIdx]?tokens[genderIdx].trim():'';
-  if(gender!=='Pria'&&gender!=='Wanita')return null;
-  let ageIdx=-1;
-  for(let i=genderIdx+1;i<Math.min(genderIdx+4,tokens.length);i++){
-    if(/^\d{1,3}$/.test(tokens[i].trim())){ageIdx=i;break;}
+function parseCsv(text){
+  const records=[];
+  let row=[],field='',quoted=false;
+  for(let i=0;i<text.length;i++){
+    const char=text[i];
+    if(char==='"'){
+      if(quoted&&text[i+1]==='"'){field+='"';i++;}
+      else quoted=!quoted;
+    }else if(char===','&&!quoted){row.push(field);field='';}
+    else if((char==='\n'||char==='\r')&&!quoted){
+      if(char==='\r'&&text[i+1]==='\n')i++;
+      row.push(field);
+      if(row.some(cell=>cell.trim()))records.push(row);
+      row=[];field='';
+    }else field+=char;
   }
-  const usia=ageIdx>=0?parseInt(tokens[ageIdx]):null;
-  const emailIdx=tokens.findIndex((t,i)=>i>ageIdx&&t.includes('@'));
-  let phone='',statusKerjaIdx=-1,posisi='',cabang='(belum diisi)',tglMulai='-',masaKerja='-';
-  if(emailIdx>=0){
-    phone=tokens[emailIdx-1]?tokens[emailIdx-1].trim():'';
-    for(let i=emailIdx+1;i<tokens.length;i++){
-      const v=tokens[i].trim();
-      if(v==='Full Time'||v==='Part Time'){statusKerjaIdx=i;break;}
-    }
-    if(statusKerjaIdx>=0){
-      posisi=tokens[statusKerjaIdx+1]?tokens[statusKerjaIdx+1].trim():'';
-      const next=tokens[statusKerjaIdx+2]?tokens[statusKerjaIdx+2].trim():'';
-      const dateRe=/^\d{1,2}\/\d{1,2}\/\d{4}$/;
-      if(dateRe.test(next)){
-        tglMulai=next;
-        masaKerja=tokens[statusKerjaIdx+3]?tokens[statusKerjaIdx+3].trim()||'-':'-';
-      }else{
-        cabang=next||'(belum diisi)';
-        const d2=tokens[statusKerjaIdx+3]?tokens[statusKerjaIdx+3].trim():'';
-        tglMulai=dateRe.test(d2)?d2:'-';
-        masaKerja=tokens[statusKerjaIdx+4]?tokens[statusKerjaIdx+4].trim()||'-':'-';
-      }
-    }
-  }
-  return{n:nama,g:gender,u:usia,st:statusKerjaIdx>=0?tokens[statusKerjaIdx].trim():'-',p:posisi||'-',c:cabang,m:tglMulai,mk:masaKerja===''?'-':masaKerja,hp:phone};
+  if(field||row.length){row.push(field);if(row.some(cell=>cell.trim()))records.push(row);}
+  return records;
 }
-function extractKaryawan(text){
-  const idx=text.indexOf('Data Base Karyawan');
-  if(idx<0)return[];
-  let sub=text.slice(idx);
-  const endIdx=sub.indexOf('\n# ',50);
-  if(endIdx>0)sub=sub.slice(0,endIdx);
-  const rows=[];
-  sub.split('\n').forEach(line=>{
-    if(/\d{15,17}/.test(line)&&(line.includes('Pria')||line.includes('Wanita'))){
-      const r=parseRow(line.split(','));
-      if(r&&r.n)rows.push(r);
-    }
-  });
-  return rows;
+function extractKaryawan(csv){
+  const records=parseCsv(csv);
+  const headerIndex=records.findIndex(row=>row.some(cell=>cell.trim().toLowerCase()==='nama lengkap'));
+  if(headerIndex<0)return[];
+  const headers=records[headerIndex].map(cell=>cell.trim().toLowerCase());
+  const column=name=>headers.indexOf(name);
+  const indexes={name:column('nama lengkap'),gender:column('jenis kelamin'),age:column('usia'),status:column('status kerja'),position:column('posisi'),branch:column('cabang'),start:column('tanggal mulai kerja'),tenure:column('masa kerja')};
+  if(Object.values(indexes).some(index=>index<0))return[];
+  return records.slice(headerIndex+1).map(row=>{
+    const value=index=>row[index]?(row[index].trim()):'';
+    const name=value(indexes.name),gender=value(indexes.gender);
+    if(!name||(gender!=='Pria'&&gender!=='Wanita'))return null;
+    const age=Number(value(indexes.age));
+    return{
+      n:name,g:gender,u:Number.isFinite(age)&&age>0?age:'-',
+      st:value(indexes.status)||'-',p:value(indexes.position)||'-',
+      c:value(indexes.branch)||'(belum diisi)',m:value(indexes.start)||'-',
+      mk:value(indexes.tenure)||'-',hp:'-'
+    };
+  }).filter(Boolean);
 }
 async function fetchLive(manual){
   setStatus('loading',manual?'Mengambil data terbaru...':'Memuat data terbaru...');
-  const mcp=await claude.use('mcp');
-  if(!mcp){setStatus('err','Koneksi Google Drive tidak tersedia di tampilan ini.');return;}
   try{
-    const result=await mcp.callTool('Google Drive','search_files',
-      {query:"title contains 'WS_GoodSpeed'",snippetVerbosity:'MAX_ALLOWED'},{cache:false});
-    let payload=result.payload;
-    if(typeof payload==='string'){try{payload=JSON.parse(payload);}catch(e){}}
-    let files=payload&&payload.files;
-    if(!files){
-      const tb=result.content&&result.content.find(b=>b.type==='text');
-      if(tb){try{files=JSON.parse(tb.text).files;}catch(e){}}
-    }
-    const match=files&&files.find(f=>f.id===FILE_ID)||(files&&files[0]);
-    if(!match||!match.contentSnippet){setStatus('err','Data tidak ditemukan di respons Drive.');return;}
-    const rows=extractKaryawan(match.contentSnippet);
-    if(rows.length){
-      DATA=rows;
-      rebuildFilters();
-      apply();
-      const t=new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
-      setStatus('ok',`Live &middot; diperbarui ${t} &middot; ${rows.length} karyawan`);
-    }else{
-      setStatus('err','Gagal membaca data karyawan dari sheet (format berubah?). Menampilkan data terakhir.');
-    }
+    const response=await fetch(SHEET_CSV_URL,{cache:'no-store'});
+    if(!response.ok)throw new Error(`HTTP ${response.status}`);
+    const rows=extractKaryawan(await response.text());
+    if(!rows.length)throw new Error('Tidak ada baris karyawan valid dari sheet.');
+    DATA=rows;
+    rebuildFilters();
+    apply();
+    const t=new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+    setStatus('ok',`Live &middot; diperbarui ${t} &middot; ${rows.length} karyawan`);
   }catch(err){
-    const code=err&&err.code;
-    if(code==='needs_reauth'||code==='server_not_connected'||code==='consent_required'){
-      setStatus('err','Google Drive perlu dihubungkan ulang di Pengaturan > Connectors.');
-    }else if(code==='selection_required'){
-      setStatus('err','Pilih akun Google Drive yang aktif dulu.');
-    }else if(err&&err.retryable){
-      setStatus('err','Koneksi bermasalah, mencoba lagi...');
-      setTimeout(()=>fetchLive(false),3000);
-    }else{
-      setStatus('err','Gagal memuat data terbaru. Menampilkan data terakhir.');
-    }
+    setStatus('err','Gagal memuat data publik. Menampilkan data terakhir.');
   }
 }
 document.getElementById('refreshBtn').addEventListener('click',()=>fetchLive(true));
